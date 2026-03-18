@@ -1,0 +1,1168 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - IHTM ERP</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <style>
+        body { background-color: #f4f6f9; }
+        .sidebar { min-height: 100vh; background-color: #343a40; color: white; padding-top: 20px; }
+        .sidebar a { color: #c2c7d0; text-decoration: none; display: block; padding: 10px 20px; cursor: pointer; }
+        .sidebar a:hover, .sidebar a.active { background-color: #494e53; color: white; }
+        .content { padding: 20px; width: 100%; }
+        .stat-card { border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); padding: 20px; text-align: center; color: white; }
+        .bg-primary { background-color: #007bff !important; }
+        .bg-success { background-color: #28a745 !important; }
+        .bg-warning { background-color: #ffc107 !important; }
+        .bg-info { background-color: #17a2b8 !important; }
+        .bg-danger { background-color: #dc3545 !important; }
+        .section-view { display: none; }
+        .section-view.active { display: block; }
+    </style>
+</head>
+<body>
+    <div class="d-flex">
+        <div class="sidebar col-md-2">
+            <h4 class="text-center mb-4">IHTM ERP</h4>
+            <a onclick="showSection('dashboard')" class="nav-link active" id="nav-dashboard">Tableau de bord</a>
+            
+            <div id="admin-menu" class="d-none">
+                <a onclick="showSection('etudiants')" class="nav-link" id="nav-etudiants">Étudiants</a>
+                <a onclick="showSection('professeurs')" class="nav-link" id="nav-professeurs">Professeurs</a>
+                <a onclick="showSection('filieres')" class="nav-link" id="nav-filieres">Filières & Matières</a>
+                <a onclick="showSection('paiements')" class="nav-link" id="nav-paiements">Paiements</a>
+            </div>
+            
+            <div id="prof-menu" class="d-none">
+                <a onclick="showSection('mes-cours')" class="nav-link" id="nav-mes-cours">Mes Cours</a>
+                <a onclick="showSection('saisie-notes')" class="nav-link" id="nav-saisie-notes">Saisie Notes</a>
+                <a onclick="showSection('emploi-temps')" class="nav-link" id="nav-emploi-temps-prof">Emploi du temps</a>
+            </div>
+            
+            <div id="etudiant-menu" class="d-none">
+                <a onclick="showSection('mes-notes')" class="nav-link" id="nav-mes-notes">Mes Notes</a>
+                <a onclick="showSection('emploi-temps')" class="nav-link" id="nav-emploi-temps">Emploi du temps</a>
+                <a onclick="showSection('mes-paiements')" class="nav-link" id="nav-mes-paiements">Mes Paiements</a>
+            </div>
+            
+            <a href="#" id="logoutBtn" class="mt-5 text-danger">Déconnexion</a>
+        </div>
+        
+        <div class="content col-md-10">
+            <!-- Alert Container -->
+            <div id="alert-container"></div>
+
+            <!-- SECTION: Dashboard -->
+            <div id="section-dashboard" class="section-view active">
+                <h2 class="mb-4">Tableau de bord</h2>
+                <div id="stats-container" class="row">
+                    <!-- Stats loaded dynamically -->
+                </div>
+            </div>
+
+            <!-- SECTION: Étudiants (Admin) -->
+            <div id="section-etudiants" class="section-view">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h2>Gestion des Étudiants</h2>
+                    <button class="btn btn-primary" onclick="openModalEtudiant()">+ Nouvel Étudiant</button>
+                </div>
+                <div class="card">
+                    <div class="card-body">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Matricule</th>
+                                    <th>Nom Complet</th>
+                                    <th>Email</th>
+                                    <th>Filière</th>
+                                    <th>Niveau</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="table-etudiants">
+                                <tr><td colspan="6" class="text-center">Chargement...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SECTION: Professeurs (Admin) -->
+            <div id="section-professeurs" class="section-view">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h2>Gestion des Professeurs</h2>
+                    <button class="btn btn-primary" onclick="openModalProfesseur()">+ Nouveau Professeur</button>
+                </div>
+                <div class="card">
+                    <div class="card-body">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Nom Complet</th>
+                                    <th>Email</th>
+                                    <th>Spécialité</th>
+                                    <th>Grade</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="table-professeurs">
+                                <tr><td colspan="6" class="text-center">Chargement...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SECTION: Filières & Matières (Admin) -->
+            <div id="section-filieres" class="section-view">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h2>Filières & Matières</h2>
+                    <div>
+                        <button class="btn btn-success me-2" onclick="openModalFiliere()">+ Nouvelle Filière</button>
+                        <button class="btn btn-primary" onclick="openModalMatiere()">+ Nouvelle Matière</button>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-header bg-dark text-white">Filières</div>
+                            <div class="card-body">
+                                <ul class="list-group" id="list-filieres">
+                                    <li class="list-group-item text-center">Chargement...</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-header bg-dark text-white">Matières</div>
+                            <div class="card-body">
+                                <ul class="list-group" id="list-matieres">
+                                    <li class="list-group-item text-center">Sélectionnez une filière</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SECTION: Paiements (Admin) -->
+            <div id="section-paiements" class="section-view">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h2>Suivi des Paiements</h2>
+                    <button class="btn btn-primary" onclick="openModalPaiement()">+ Enregistrer un paiement</button>
+                </div>
+                <div class="card">
+                    <div class="card-body">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Référence</th>
+                                    <th>Étudiant</th>
+                                    <th>Montant</th>
+                                    <th>Motif</th>
+                                    <th>Date</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="table-paiements">
+                                <tr><td colspan="6" class="text-center">Chargement...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SECTION: Mes Cours (Professeur) -->
+            <div id="section-mes-cours" class="section-view">
+                <h2 class="mb-4">Mes Cours Assignés</h2>
+                <div class="row" id="grid-mes-cours">
+                    <div class="col-12 text-center">Chargement...</div>
+                </div>
+            </div>
+
+            <!-- SECTION: Saisie Notes (Professeur) -->
+            <div id="section-saisie-notes" class="section-view">
+                <h2 class="mb-4">Saisie des Notes</h2>
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <form id="form-select-matiere" class="row g-3 align-items-end">
+                            <div class="col-md-8">
+                                <label class="form-label">Sélectionner une matière</label>
+                                <select class="form-select" id="select-matiere-prof">
+                                    <option value="">Choisir...</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <button type="button" class="btn btn-primary w-100" onclick="loadEtudiantsForNotes()">Afficher les étudiants</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+                <div class="card d-none" id="card-saisie-notes">
+                    <div class="card-body">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Étudiant</th>
+                                    <th>Note CC (/20)</th>
+                                    <th>Note Examen (/20)</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="table-saisie-notes">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SECTION: Mes Notes (Étudiant) -->
+            <div id="section-mes-notes" class="section-view">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h2>Mes Notes</h2>
+                    <button class="btn btn-outline-primary" onclick="downloadReleve()">Télécharger Relevé (PDF)</button>
+                </div>
+                <div class="card">
+                    <div class="card-body">
+                        <table class="table table-bordered">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th>Matière</th>
+                                    <th>Coefficient</th>
+                                    <th>Note CC</th>
+                                    <th>Note Examen</th>
+                                    <th>Note Finale</th>
+                                </tr>
+                            </thead>
+                            <tbody id="table-mes-notes">
+                                <tr><td colspan="5" class="text-center">Chargement...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SECTION: Emploi du temps (Étudiant) -->
+            <div id="section-emploi-temps" class="section-view">
+                <h2 class="mb-4">Mon Emploi du temps</h2>
+                <div class="card">
+                    <div class="card-body">
+                        <table class="table table-bordered text-center">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Heure</th>
+                                    <th>Lundi</th>
+                                    <th>Mardi</th>
+                                    <th>Mercredi</th>
+                                    <th>Jeudi</th>
+                                    <th>Vendredi</th>
+                                    <th>Samedi</th>
+                                </tr>
+                            </thead>
+                            <tbody id="table-emploi-temps">
+                                <tr><td colspan="6" class="text-muted py-5">Aucun cours programmé cette semaine</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SECTION: Mes Paiements (Étudiant) -->
+            <div id="section-mes-paiements" class="section-view">
+                <h2 class="mb-4">Historique de mes paiements</h2>
+                <div class="card">
+                    <div class="card-body">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Référence</th>
+                                    <th>Motif</th>
+                                    <th>Montant</th>
+                                    <th>Reçu</th>
+                                </tr>
+                            </thead>
+                            <tbody id="table-mes-paiements">
+                                <tr><td colspan="5" class="text-center">Chargement...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Modals Admin -->
+    <!-- Modal Nouvel Étudiant -->
+    <div class="modal fade" id="modalEtudiant" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Nouvel Étudiant</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="formEtudiant">
+                        <div class="mb-3">
+                            <label>Nom Complet</label>
+                            <input type="text" class="form-control" name="nom_complet" required>
+                        </div>
+                        <div class="mb-3">
+                            <label>Email</label>
+                            <input type="email" class="form-control" name="email" required>
+                        </div>
+                        <div class="mb-3">
+                            <label>Filière</label>
+                            <select class="form-select" name="filiere_id" id="select-filiere-etudiant" required>
+                                <option value="">Chargement...</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label>Date de Naissance</label>
+                            <input type="date" class="form-control" name="date_naissance">
+                        </div>
+                        <div class="mb-3">
+                            <label>Lieu de Naissance</label>
+                            <input type="text" class="form-control" name="lieu_naissance">
+                        </div>
+                        <div class="mb-3">
+                            <label>Nationalité</label>
+                            <input type="text" class="form-control" name="nationalite">
+                        </div>
+                        <div class="mb-3">
+                            <label>Année d'étude (1, 2, 3)</label>
+                            <input type="number" class="form-control" name="annee_etude" min="1" max="5" required>
+                        </div>
+                        <div class="mb-3">
+                            <label>Montant Frais (FCFA)</label>
+                            <input type="number" class="form-control" name="montant_frais" required>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                    <button type="button" class="btn btn-primary" onclick="saveEtudiant()">Enregistrer</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Nouveau Professeur -->
+    <div class="modal fade" id="modalProfesseur" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Nouveau Professeur</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="formProfesseur">
+                        <div class="mb-3">
+                            <label>Nom Complet</label>
+                            <input type="text" class="form-control" name="nom_complet" required>
+                        </div>
+                        <div class="mb-3">
+                            <label>Email</label>
+                            <input type="email" class="form-control" name="email" required>
+                        </div>
+                        <div class="mb-3">
+                            <label>Spécialité</label>
+                            <input type="text" class="form-control" name="specialite">
+                        </div>
+                        <div class="mb-3">
+                            <label>Grade</label>
+                            <select class="form-select" name="grade">
+                                <option value="Maitre-assistant">Maitre-assistant</option>
+                                <option value="Professeur">Professeur</option>
+                                <option value="Docteur">Docteur</option>
+                                <option value="Ingénieur">Ingénieur</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label>Date d'embauche</label>
+                            <input type="date" class="form-control" name="date_embauche">
+                        </div>
+                        <div class="mb-3">
+                            <label>Type de contrat</label>
+                            <select class="form-select" name="type_contrat">
+                                <option value="CDI">CDI</option>
+                                <option value="CDD">CDD</option>
+                                <option value="Vacataire">Vacataire</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label>Charge horaire (h)</label>
+                            <input type="number" class="form-control" name="charge_horaire">
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                    <button type="button" class="btn btn-primary" onclick="saveProfesseur()">Enregistrer</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Nouvelle Filière -->
+    <div class="modal fade" id="modalFiliere" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Nouvelle Filière</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="formFiliere">
+                        <div class="mb-3">
+                            <label>Nom</label>
+                            <input type="text" class="form-control" name="nom" required>
+                        </div>
+                        <div class="mb-3">
+                            <label>Code</label>
+                            <input type="text" class="form-control" name="code" required>
+                        </div>
+                        <div class="mb-3">
+                            <label>Description</label>
+                            <textarea class="form-control" name="description"></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label>Responsable (Professeur)</label>
+                            <select class="form-select" name="responsable_id" id="select-responsable-filiere">
+                                <option value="">Aucun</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label>Durée (années)</label>
+                            <input type="number" class="form-control" name="duree_ans" required>
+                        </div>
+                        <div class="mb-3">
+                            <label>Frais de scolarité (FCFA)</label>
+                            <input type="number" class="form-control" name="frais_scolarite" required>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                    <button type="button" class="btn btn-primary" onclick="saveFiliere()">Enregistrer</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Nouvelle Matière -->
+    <div class="modal fade" id="modalMatiere" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Nouvelle Matière</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="formMatiere">
+                        <div class="mb-3">
+                            <label>Nom</label>
+                            <input type="text" class="form-control" name="nom" required>
+                        </div>
+                        <div class="mb-3">
+                            <label>Code</label>
+                            <input type="text" class="form-control" name="code" required>
+                        </div>
+                        <div class="mb-3">
+                            <label>Coefficient</label>
+                            <input type="number" class="form-control" name="coefficient" required>
+                        </div>
+                        <div class="mb-3">
+                            <label>Crédits</label>
+                            <input type="number" class="form-control" name="credit" required>
+                        </div>
+                        <div class="mb-3">
+                            <label>Semestre (1 ou 2)</label>
+                            <input type="number" class="form-control" name="semestre" min="1" max="2" required>
+                        </div>
+                        <div class="mb-3">
+                            <label>Filière</label>
+                            <select class="form-select" name="filiere_id" id="select-filiere-matiere" required>
+                                <option value="">Chargement...</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label>Professeur</label>
+                            <select class="form-select" name="professeur_id" id="select-prof-matiere">
+                                <option value="">Aucun</option>
+                            </select>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                    <button type="button" class="btn btn-primary" onclick="saveMatiere()">Enregistrer</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Nouveau Paiement -->
+    <div class="modal fade" id="modalPaiement" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Nouveau Paiement</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="formPaiement">
+                        <div class="mb-3">
+                            <label>Étudiant</label>
+                            <select class="form-select" name="etudiant_id" id="select-etudiant-paiement" required>
+                                <option value="">Chargement...</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label>Montant (FCFA)</label>
+                            <input type="number" class="form-control" name="montant" required>
+                        </div>
+                        <div class="mb-3">
+                            <label>Date de paiement</label>
+                            <input type="date" class="form-control" name="date_paiement" required>
+                        </div>
+                        <div class="mb-3">
+                            <label>Mode de paiement</label>
+                            <select class="form-select" name="mode_paiement" required>
+                                <option value="especes">Espèces</option>
+                                <option value="cheque">Chèque</option>
+                                <option value="virement">Virement</option>
+                                <option value="mobile_money">Mobile Money</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label>Référence (Numéro de reçu)</label>
+                            <input type="text" class="form-control" name="reference" required>
+                        </div>
+                        <div class="mb-3">
+                            <label>Année Académique</label>
+                            <input type="text" class="form-control" name="annee_academique" placeholder="ex: 2024-2025" required>
+                        </div>
+                        <div class="mb-3">
+                            <label>Commentaire</label>
+                            <textarea class="form-control" name="commentaire"></textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                    <button type="button" class="btn btn-primary" onclick="savePaiement()">Enregistrer</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const token = localStorage.getItem('token');
+        const role = localStorage.getItem('role');
+        
+        // Configuration des headers pour fetch
+        const fetchOptions = {
+            headers: { 
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            }
+        };
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            if (!token) {
+                window.location.href = '/login';
+                return;
+            }
+            
+            // Affichage du menu selon le rôle
+            if (role === 'admin') document.getElementById('admin-menu').classList.remove('d-none');
+            if (role === 'professeur') document.getElementById('prof-menu').classList.remove('d-none');
+            if (role === 'etudiant') document.getElementById('etudiant-menu').classList.remove('d-none');
+            
+            // Charger le dashboard par défaut
+            loadDashboardStats();
+            
+            document.getElementById('logoutBtn').addEventListener('click', () => {
+                localStorage.clear();
+                window.location.href = '/login';
+            });
+        });
+
+        // Navigation SPA
+        function showSection(sectionId) {
+            // Cacher toutes les sections
+            document.querySelectorAll('.section-view').forEach(el => el.classList.remove('active'));
+            // Désélectionner tous les liens
+            document.querySelectorAll('.sidebar .nav-link').forEach(el => el.classList.remove('active'));
+            
+            // Afficher la section demandée
+            document.getElementById(`section-${sectionId}`).classList.add('active');
+            const navLink = document.getElementById(`nav-${sectionId}`);
+            if (navLink) navLink.classList.add('active');
+            const navLinkProf = document.getElementById(`nav-${sectionId}-prof`);
+            if (navLinkProf) navLinkProf.classList.add('active');
+            
+            // Charger les données correspondantes
+            if (sectionId === 'dashboard') loadDashboardStats();
+            else if (sectionId === 'etudiants' && role === 'admin') loadEtudiants();
+            else if (sectionId === 'professeurs' && role === 'admin') loadProfesseurs();
+            else if (sectionId === 'filieres' && role === 'admin') loadFilieres();
+            else if (sectionId === 'paiements' && role === 'admin') loadPaiementsAdmin();
+            else if (sectionId === 'mes-cours' && role === 'professeur') loadMesCours();
+            else if (sectionId === 'saisie-notes' && role === 'professeur') loadMatieresProf();
+            else if (sectionId === 'emploi-temps') loadEmploiTemps();
+            else if (sectionId === 'mes-notes' && role === 'etudiant') loadMesNotes();
+            else if (sectionId === 'mes-paiements' && role === 'etudiant') loadMesPaiements();
+        }
+
+        // --- FONCTIONS DE CHARGEMENT DES DONNÉES ---
+
+        async function loadDashboardStats() {
+            try {
+                const response = await fetch(`/api/dashboard/${role}`, fetchOptions);
+                const result = await response.json();
+                
+                if (response.ok) {
+                    const container = document.getElementById('stats-container');
+                    let html = '';
+                    
+                    if (role === 'admin') {
+                        html = `
+                            <div class="col-md-3 mb-4"><div class="stat-card bg-primary"><h3>${result.data.totalEtudiants || 0}</h3><p>Étudiants</p></div></div>
+                            <div class="col-md-3 mb-4"><div class="stat-card bg-success"><h3>${result.data.totalProfesseurs || 0}</h3><p>Professeurs</p></div></div>
+                            <div class="col-md-3 mb-4"><div class="stat-card bg-info"><h3>${result.data.totalFilieres || 0}</h3><p>Filières</p></div></div>
+                            <div class="col-md-3 mb-4"><div class="stat-card bg-warning"><h3>${result.data.totalEncaisse || 0} FCFA</h3><p>Total Encaissé</p></div></div>
+                        `;
+                    } else if (role === 'professeur') {
+                        html = `
+                            <div class="col-md-6 mb-4"><div class="stat-card bg-primary"><h3>${result.data.totalMatieres || 0}</h3><p>Matières enseignées</p></div></div>
+                            <div class="col-md-6 mb-4"><div class="stat-card bg-info"><h3>${result.data.chargeHoraire || 0}h</h3><p>Charge horaire</p></div></div>
+                        `;
+                    } else if (role === 'etudiant') {
+                        html = `
+                            <div class="col-md-4 mb-4"><div class="stat-card bg-primary"><h3>${result.data.montantFrais || 0} FCFA</h3><p>Frais Totaux</p></div></div>
+                            <div class="col-md-4 mb-4"><div class="stat-card bg-success"><h3>${result.data.totalPaye || 0} FCFA</h3><p>Montant Payé</p></div></div>
+                            <div class="col-md-4 mb-4"><div class="stat-card ${result.data.resteAPayer > 0 ? 'bg-danger' : 'bg-success'}"><h3>${result.data.resteAPayer || 0} FCFA</h3><p>Reste à payer</p></div></div>
+                        `;
+                    }
+                    container.innerHTML = html;
+                } else if (response.status === 401) {
+                    window.location.href = '/login';
+                }
+            } catch (error) { console.error(error); }
+        }
+
+        async function loadEtudiants() {
+            try {
+                const response = await fetch('/api/etudiants', fetchOptions);
+                const result = await response.json();
+                const tbody = document.getElementById('table-etudiants');
+                
+                if (response.ok && result.data.length > 0) {
+                    tbody.innerHTML = result.data.map(e => `
+                        <tr>
+                            <td><span class="badge bg-secondary">${e.matricule}</span></td>
+                            <td>${e.user ? e.user.nom_complet : 'N/A'}</td>
+                            <td>${e.user ? e.user.email : 'N/A'}</td>
+                            <td>${e.filiere ? e.filiere.nom : 'Non assignée'}</td>
+                            <td>${e.niveau}</td>
+                            <td>
+                                <button class="btn btn-sm btn-info text-white">Voir</button>
+                                <button class="btn btn-sm btn-warning text-white">Éditer</button>
+                            </td>
+                        </tr>
+                    `).join('');
+                } else {
+                    tbody.innerHTML = '<tr><td colspan="6" class="text-center">Aucun étudiant trouvé.</td></tr>';
+                }
+            } catch (error) { console.error(error); }
+        }
+
+        async function loadProfesseurs() {
+            try {
+                const response = await fetch('/api/professeurs', fetchOptions);
+                const result = await response.json();
+                const tbody = document.getElementById('table-professeurs');
+                
+                if (response.ok && result.data.length > 0) {
+                    tbody.innerHTML = result.data.map(p => `
+                        <tr>
+                            <td>#${p.id}</td>
+                            <td>${p.user ? p.user.nom_complet : 'N/A'}</td>
+                            <td>${p.user ? p.user.email : 'N/A'}</td>
+                            <td>${p.specialite || '-'}</td>
+                            <td>${p.grade || '-'}</td>
+                            <td>
+                                <button class="btn btn-sm btn-warning text-white">Éditer</button>
+                            </td>
+                        </tr>
+                    `).join('');
+                } else {
+                    tbody.innerHTML = '<tr><td colspan="6" class="text-center">Aucun professeur trouvé.</td></tr>';
+                }
+            } catch (error) { console.error(error); }
+        }
+
+        async function loadFilieres() {
+            try {
+                const response = await fetch('/api/filieres', fetchOptions);
+                const result = await response.json();
+                const ul = document.getElementById('list-filieres');
+                
+                if (response.ok && result.data.length > 0) {
+                    ul.innerHTML = result.data.map(f => `
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            ${f.nom} (${f.code})
+                            <span class="badge bg-primary rounded-pill">${f.frais_scolarite} FCFA</span>
+                        </li>
+                    `).join('');
+                } else {
+                    ul.innerHTML = '<li class="list-group-item text-center">Aucune filière trouvée.</li>';
+                }
+            } catch (error) { console.error(error); }
+        }
+
+        async function loadPaiementsAdmin() {
+            try {
+                const response = await fetch('/api/paiements', fetchOptions);
+                const result = await response.json();
+                const tbody = document.getElementById('table-paiements');
+                
+                if (response.ok && result.data.length > 0) {
+                    tbody.innerHTML = result.data.map(p => `
+                        <tr>
+                            <td><strong>${p.reference}</strong></td>
+                            <td>${p.etudiant && p.etudiant.user ? p.etudiant.user.nom_complet : 'N/A'}</td>
+                            <td><span class="text-success fw-bold">${p.montant} FCFA</span></td>
+                            <td>${p.commentaire || '-'}</td>
+                            <td>${new Date(p.date_paiement).toLocaleDateString('fr-FR')}</td>
+                            <td>
+                                <a href="/api/paiements/${p.id}/recu" target="_blank" class="btn btn-sm btn-outline-primary">Reçu PDF</a>
+                            </td>
+                        </tr>
+                    `).join('');
+                } else {
+                    tbody.innerHTML = '<tr><td colspan="6" class="text-center">Aucun paiement trouvé.</td></tr>';
+                }
+            } catch (error) { console.error(error); }
+        }
+
+        async function loadMesCours() {
+            try {
+                const response = await fetch('/api/matieres/professeur/me', fetchOptions);
+                const result = await response.json();
+                const container = document.getElementById('grid-mes-cours');
+                
+                if (response.ok && result.data.length > 0) {
+                    container.innerHTML = result.data.map(m => `
+                        <div class="col-md-4 mb-4">
+                            <div class="card h-100 border-primary">
+                                <div class="card-header bg-primary text-white">${m.nom}</div>
+                                <div class="card-body">
+                                    <p><strong>Filière:</strong> ${m.filiere ? m.filiere.nom : 'N/A'}</p>
+                                    <p><strong>Volume horaire:</strong> ${m.volume_horaire || 0}h</p>
+                                    <p><strong>Coefficient:</strong> ${m.coefficient || 1}</p>
+                                    <button class="btn btn-outline-primary w-100" onclick="showSection('saisie-notes'); setTimeout(() => { document.getElementById('select-matiere-prof').value = '${m.id}'; loadEtudiantsForNotes(); }, 500);">Saisir les notes</button>
+                                </div>
+                            </div>
+                        </div>
+                    `).join('');
+                } else {
+                    container.innerHTML = '<div class="col-12"><p class="text-center">Aucun cours assigné pour le moment.</p></div>';
+                }
+            } catch (error) { console.error(error); }
+        }
+
+        async function loadMatieresProf() {
+            try {
+                const response = await fetch('/api/matieres/professeur/me', fetchOptions);
+                const result = await response.json();
+                const select = document.getElementById('select-matiere-prof');
+                
+                if (response.ok && result.data.length > 0) {
+                    select.innerHTML = '<option value="">Choisir une matière...</option>' + 
+                        result.data.map(m => `<option value="${m.id}">${m.nom} (${m.filiere ? m.filiere.nom : 'N/A'})</option>`).join('');
+                } else {
+                    select.innerHTML = '<option value="">Aucune matière assignée</option>';
+                }
+            } catch (error) { console.error(error); }
+        }
+
+        async function loadEtudiantsForNotes() {
+            const matiereId = document.getElementById('select-matiere-prof').value;
+            if (!matiereId) return alert('Veuillez sélectionner une matière');
+            
+            try {
+                const response = await fetch(`/api/notes/matiere/${matiereId}/etudiants`, fetchOptions);
+                const result = await response.json();
+                const tbody = document.getElementById('table-saisie-notes');
+                
+                if (response.ok) {
+                    document.getElementById('card-saisie-notes').classList.remove('d-none');
+                    if (result.data.length > 0) {
+                        tbody.innerHTML = result.data.map(e => {
+                            const note = e.notes && e.notes.length > 0 ? e.notes[0] : { note_cc: '', note_examen: '' };
+                            return `
+                                <tr>
+                                    <td>${e.user ? e.user.nom_complet : 'N/A'} (${e.matricule})</td>
+                                    <td><input type="number" id="cc-${e.id}" class="form-control form-control-sm" value="${note.note_cc !== null && note.note_cc !== undefined ? note.note_cc : ''}" max="20" step="0.25"></td>
+                                    <td><input type="number" id="exam-${e.id}" class="form-control form-control-sm" value="${note.note_examen !== null && note.note_examen !== undefined ? note.note_examen : ''}" max="20" step="0.25"></td>
+                                    <td><button class="btn btn-sm btn-success" onclick="saveNote(${e.id}, ${matiereId})">Enregistrer</button></td>
+                                </tr>
+                            `;
+                        }).join('');
+                    } else {
+                        tbody.innerHTML = '<tr><td colspan="4" class="text-center">Aucun étudiant dans cette filière.</td></tr>';
+                    }
+                }
+            } catch (error) { console.error(error); }
+        }
+
+        async function saveNote(etudiantId, matiereId) {
+            const note_cc = document.getElementById(`cc-${etudiantId}`).value;
+            const note_examen = document.getElementById(`exam-${etudiantId}`).value;
+            
+            try {
+                const response = await fetch('/api/notes/saisie', {
+                    method: 'POST',
+                    headers: fetchOptions.headers,
+                    body: JSON.stringify({
+                        etudiant_id: etudiantId,
+                        matiere_id: matiereId,
+                        note_cc: note_cc ? parseFloat(note_cc) : null,
+                        note_examen: note_examen ? parseFloat(note_examen) : null,
+                        session: 'normale',
+                        annee_academique: new Date().getFullYear() + '-' + (new Date().getFullYear() + 1)
+                    })
+                });
+                
+                const result = await response.json();
+                if (response.ok) {
+                    showAlert('Note enregistrée avec succès', 'success');
+                } else {
+                    showAlert(result.message || 'Erreur lors de l\\'enregistrement', 'danger');
+                }
+            } catch (error) {
+                console.error(error);
+                showAlert('Erreur serveur', 'danger');
+            }
+        }
+
+        async function loadMesNotes() {
+            try {
+                // Pour l'étudiant connecté, on récupère son profil pour avoir son ID étudiant
+                const profileRes = await fetch('/api/auth/profile', fetchOptions);
+                const profile = await profileRes.json();
+                
+                if (profile.data && profile.data.etudiant) {
+                    const etudiantId = profile.data.etudiant.id;
+                    const response = await fetch(`/api/notes/etudiant/${etudiantId}`, fetchOptions);
+                    const result = await response.json();
+                    
+                    const tbody = document.getElementById('table-mes-notes');
+                    
+                    if (response.ok && result.data.length > 0) {
+                        tbody.innerHTML = result.data.map(n => `
+                            <tr>
+                                <td><strong>${n.matiere ? n.matiere.nom : 'N/A'}</strong></td>
+                                <td>${n.matiere ? n.matiere.coefficient : '-'}</td>
+                                <td>${n.note_cc !== null ? n.note_cc : '-'}</td>
+                                <td>${n.note_examen !== null ? n.note_examen : '-'}</td>
+                                <td><span class="badge ${n.note_finale >= 10 ? 'bg-success' : 'bg-danger'} fs-6">${n.note_finale !== null ? n.note_finale : '-'}</span></td>
+                            </tr>
+                        `).join('');
+                    } else {
+                        tbody.innerHTML = '<tr><td colspan="5" class="text-center">Aucune note disponible pour le moment.</td></tr>';
+                    }
+                }
+            } catch (error) { console.error(error); }
+        }
+
+        async function loadMesPaiements() {
+            try {
+                const profileRes = await fetch('/api/auth/profile', fetchOptions);
+                const profile = await profileRes.json();
+                
+                if (profile.data && profile.data.etudiant) {
+                    const etudiantId = profile.data.etudiant.id;
+                    const response = await fetch(`/api/paiements/etudiant/${etudiantId}`, fetchOptions);
+                    const result = await response.json();
+                    
+                    const tbody = document.getElementById('table-mes-paiements');
+                    
+                    if (response.ok && result.data.length > 0) {
+                        tbody.innerHTML = result.data.map(p => `
+                            <tr>
+                                <td>${new Date(p.date_paiement).toLocaleDateString('fr-FR')}</td>
+                                <td><strong>${p.reference}</strong></td>
+                                <td>${p.commentaire || '-'}</td>
+                                <td><span class="text-success fw-bold">${p.montant} FCFA</span></td>
+                                <td>
+                                    <a href="/api/paiements/${p.id}/recu" target="_blank" class="btn btn-sm btn-outline-primary">Télécharger</a>
+                                </td>
+                            </tr>
+                        `).join('');
+                    } else {
+                        tbody.innerHTML = '<tr><td colspan="5" class="text-center">Aucun paiement enregistré.</td></tr>';
+                    }
+                }
+            } catch (error) { console.error(error); }
+        }
+
+        function downloadReleve() {
+            alert("Génération du relevé PDF en cours... (Cette fonctionnalité nécessite que l'étudiant ait des notes enregistrées)");
+            // Implémentation réelle : window.open(`/api/notes/etudiant/${etudiantId}/releve`, '_blank');
+        }
+
+        async function loadEmploiTemps() {
+            try {
+                let url = '';
+                if (role === 'professeur') {
+                    url = '/api/emploi-temps/professeur/me';
+                } else if (role === 'etudiant') {
+                    const profileRes = await fetch('/api/auth/profile', fetchOptions);
+                    const profile = await profileRes.json();
+                    if (profile.data && profile.data.etudiant) {
+                        url = `/api/emploi-temps/filiere/${profile.data.etudiant.filiere_id}`;
+                    }
+                }
+                
+                if (!url) return;
+
+                const response = await fetch(url, fetchOptions);
+                const result = await response.json();
+                const tbody = document.getElementById('table-emploi-temps');
+                
+                if (response.ok && result.data.length > 0) {
+                    const jours = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi'];
+                    const heures = ['08:00', '10:00', '13:00', '15:00'];
+                    const heuresFin = ['10:00', '12:00', '15:00', '17:00'];
+                    
+                    let html = '';
+                    heures.forEach((heure, index) => {
+                        html += `<tr><td><strong>${heure} - ${heuresFin[index]}</strong></td>`;
+                        jours.forEach(jour => {
+                            const seance = result.data.find(s => s.jour_semaine === jour && s.heure_debut.startsWith(heure));
+                            if (seance) {
+                                html += `<td class="bg-light">
+                                    <strong>${seance.matiere ? seance.matiere.nom : 'N/A'}</strong><br>
+                                    <small>${role === 'professeur' ? (seance.matiere && seance.matiere.filiere ? seance.matiere.filiere.nom : '') : (seance.matiere && seance.matiere.professeur && seance.matiere.professeur.user ? seance.matiere.professeur.user.nom_complet : '')}</small><br>
+                                    <span class="badge bg-secondary">${seance.salle}</span>
+                                </td>`;
+                            } else {
+                                html += `<td></td>`;
+                            }
+                        });
+                        html += `</tr>`;
+                    });
+                    tbody.innerHTML = html;
+                } else {
+                    tbody.innerHTML = '<tr><td colspan="7" class="text-muted py-5 text-center">Aucun cours programmé cette semaine</td></tr>';
+                }
+            } catch (error) { console.error(error); }
+        }
+
+        // --- FONCTIONS DE CRÉATION (ADMIN) ---
+
+        function showAlert(message, type = 'success') {
+            const alertHtml = `<div class="alert alert-${type} alert-dismissible fade show" role="alert">
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>`;
+            document.getElementById('alert-container').innerHTML = alertHtml;
+            setTimeout(() => {
+                document.getElementById('alert-container').innerHTML = '';
+            }, 5000);
+        }
+
+        async function openModalEtudiant() {
+            // Charger les filières pour le select
+            const res = await fetch('/api/filieres', fetchOptions);
+            const filieres = await res.json();
+            const select = document.getElementById('select-filiere-etudiant');
+            if (res.ok && filieres.data) {
+                select.innerHTML = '<option value="">Choisir une filière...</option>' + 
+                    filieres.data.map(f => `<option value="${f.id}">${f.nom}</option>`).join('');
+            }
+            new bootstrap.Modal(document.getElementById('modalEtudiant')).show();
+        }
+
+        async function saveEtudiant() {
+            const form = document.getElementById('formEtudiant');
+            const formData = new FormData(form);
+            const data = Object.fromEntries(formData.entries());
+            
+            try {
+                const res = await fetch('/api/etudiants', {
+                    method: 'POST',
+                    headers: fetchOptions.headers,
+                    body: JSON.stringify(data)
+                });
+                const result = await res.json();
+                if (res.ok) {
+                    bootstrap.Modal.getInstance(document.getElementById('modalEtudiant')).hide();
+                    form.reset();
+                    showAlert('Étudiant ajouté avec succès');
+                    loadEtudiants();
+                    loadDashboardStats();
+                } else {
+                    showAlert(result.message || 'Erreur lors de l\'ajout', 'danger');
+                }
+            } catch (error) { console.error(error); showAlert('Erreur serveur', 'danger'); }
+        }
+
+        async function openModalProfesseur() {
+            new bootstrap.Modal(document.getElementById('modalProfesseur')).show();
+        }
+
+        async function saveProfesseur() {
+            const form = document.getElementById('formProfesseur');
+            const formData = new FormData(form);
+            const data = Object.fromEntries(formData.entries());
+            
+            try {
+                const res = await fetch('/api/professeurs', {
+                    method: 'POST',
+                    headers: fetchOptions.headers,
+                    body: JSON.stringify(data)
+                });
+                const result = await res.json();
+                if (res.ok) {
+                    bootstrap.Modal.getInstance(document.getElementById('modalProfesseur')).hide();
+                    form.reset();
+                    showAlert('Professeur ajouté avec succès');
+                    loadProfesseurs();
+                    loadDashboardStats();
+                } else {
+                    showAlert(result.message || 'Erreur lors de l\'ajout', 'danger');
+                }
+            } catch (error) { console.error(error); showAlert('Erreur serveur', 'danger'); }
+        }
+
+        async function openModalFiliere() {
+            // Charger les profs pour le responsable
+            const res = await fetch('/api/professeurs', fetchOptions);
+            const profs = await res.json();
+            const select = document.getElementById('select-responsable-filiere');
+            if (res.ok && profs.data) {
+                select.innerHTML = '<option value="">Aucun</option>' + 
+                    profs.data.map(p => `<option value="${p.id}">${p.user ? p.user.nom_complet : 'Prof #'+p.id}</option>`).join('');
+            }
+            new bootstrap.Modal(document.getElementById('modalFiliere')).show();
+        }
+
+        async function saveFiliere() {
+            const form = document.getElementById('formFiliere');
+            const formData = new FormData(form);
+            const data = Object.fromEntries(formData.entries());
+            if(!data.responsable_id) delete data.responsable_id; // Handle empty option
+            
+            try {
+                const res = await fetch('/api/filieres', {
+                    method: 'POST',
+                    headers: fetchOptions.headers,
+                    body: JSON.stringify(data)
+                });
+                const result = await res.json();
+                if (res.ok) {
+                    bootstrap.Modal.getInstance(document.getElementById('modalFiliere')).hide();
+                    form.reset();
+                    showAlert('Filière ajoutée avec succès');
+                    loadFilieres();
+                    loadDashboardStats();
+                } else {
+                    showAlert(result.message || 'Erreur lors de l\'ajout', 'danger');
+                }
+            } catch (error) { console.error(error); showAlert('Erreur serveur', 'danger'); }
+        }
+
+        async function openModalMatiere() {
+            // Charger les filières et profs
+            const resF = await fetch('/api/filieres', fetchOptions);
+            const filieres = await resF.json();
+            const selectF = document.getElementById('select-filiere-matiere');
+            if (resF.ok && filieres.data) {
+                selectF.innerHTML = '<option value="">Choisir une filière...</option>' + 
+                    filieres.data.map(f => `<option value="${f.id}">${f.nom}</option>`).join('');
+            }
+
+            const resP = await fetch('/api/professeurs', fetchOptions);
+            const profs = await resP.json();
+            const selectP = document.getElementById('select-prof-matiere');
+            if (resP.ok && profs.data) {
+                selectP.innerHTML = '<option value="">Aucun</option>' + 
+                    profs.data.map(p => `<option value="${p.id}">${p.user ? p.user.nom_complet : 'Prof #'+p.id}</option>`).join('');
+            }
+
+            new bootstrap.Modal(document.getElementById('modalMatiere')).show();
+        }
+
+        async function saveMatiere() {
+            const form = document.getElementById('formMatiere');
+            const formData = new FormData(form);
+            const data = Object.fromEntries(formData.entries());
+            if(!data.professeur_id) delete data.professeur_id;
+            
+            try {
+                const res = await fetch('/api/matieres', {
+                    method: 'POST',
+                    headers: fetchOptions.headers,
+                    body: JSON.stringify(data)
+                });
+                const result = await res.json();
+                if (res.ok) {
+                    bootstrap.Modal.getInstance(document.getElementById('modalMatiere')).hide();
+                    form.reset();
+                    showAlert('Matière ajoutée avec succès');
+                    // On recharge les filières car les matières y sont liées dans l'affichage (à améliorer)
+                    loadFilieres(); 
+                } else {
+                    showAlert(result.message || 'Erreur lors de l\'ajout', 'danger');
+                }
+            } catch (error) { console.error(error); showAlert('Erreur serveur', 'danger'); }
+        }
+
+        async function openModalPaiement() {
+            // Charger les étudiants
+            const res = await fetch('/api/etudiants', fetchOptions);
+            const etudiants = await res.json();
+            const select = document.getElementById('select-etudiant-paiement');
+            if (res.ok && etudiants.data) {
+                select.innerHTML = '<option value="">Choisir un étudiant...</option>' + 
+                    etudiants.data.map(e => `<option value="${e.id}">${e.matricule} - ${e.user ? e.user.nom_complet : ''}</option>`).join('');
+            }
+            new bootstrap.Modal(document.getElementById('modalPaiement')).show();
+        }
+
+        async function savePaiement() {
+            const form = document.getElementById('formPaiement');
+            const formData = new FormData(form);
+            const data = Object.fromEntries(formData.entries());
+            
+            try {
+                const res = await fetch('/api/paiements', {
+                    method: 'POST',
+                    headers: fetchOptions.headers,
+                    body: JSON.stringify(data)
+                });
+                const result = await res.json();
+                if (res.ok) {
+                    bootstrap.Modal.getInstance(document.getElementById('modalPaiement')).hide();
+                    form.reset();
+                    showAlert('Paiement enregistré avec succès');
+                    loadPaiementsAdmin();
+                    loadDashboardStats();
+                } else {
+                    showAlert(result.message || 'Erreur lors de l\'enregistrement', 'danger');
+                }
+            } catch (error) { console.error(error); showAlert('Erreur serveur', 'danger'); }
+        }
+    </script>
+</body>
+</html>
