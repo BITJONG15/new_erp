@@ -1,6 +1,6 @@
 # IHTM ERP - Système de Gestion Académique
 
-## 🚀 Lancement en Local (Optimisé pour Windows)
+## Lancement en Local (Optimisé pour Windows)
 
 Ce projet est conçu pour être facilement déployable en local. Le fichier `package.json` a été spécifiquement allégé et optimisé pour les environnements Windows afin d'éviter les problèmes de compilation de modules natifs et de réduire drastiquement la taille du dossier `node_modules` (suppression des dépendances Angular inutilisées).
 
@@ -44,14 +44,14 @@ Ce projet est conçu pour être facilement déployable en local. Le fichier `pac
    Ouvrez votre navigateur web et allez à l'adresse :
    **http://localhost:3000**
 
-### 🔑 Identifiants par défaut
+### Identifiants par défaut
 Au premier lancement, la base de données SQLite (`ihtm_erp.sqlite`) est automatiquement créée et un compte administrateur par défaut est généré :
 - **Email :** `admin@ihtm.edu`
 - **Mot de passe :** `admin123`
 
 ---
 
-## 🌟 Fonctionnalités Implémentées
+## Fonctionnalités Implémentées
 
 Le système IHTM ERP est une solution complète couvrant les besoins de l'administration, des professeurs et des étudiants.
 
